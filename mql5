@@ -1,0 +1,131 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                          Gold Dragon AI MT5      |
+//|                                      Developer: Forex Robot Easy Team |
+//|                                      Website: forexroboteasy.com |
+//+------------------------------------------------------------------+
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <OpenAI.mqh>
+
+// Define constants for trading parameters
+#define LOT_SIZE 0.1
+#define STOP_LOSS 50
+#define TAKE_PROFIT 100
+#define TRAILING_STOP 30
+#define BREAK_EVEN 20
+
+// Define global variables
+CTrade trade;
+COpenAI ai;
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                        OnInit() Function                          |
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnInit()
+{
+   // Initialize the AI model
+   ai.Init();
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                         OnTick() Function                         |
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   // Get current market conditions
+   double currentPrice = MarketInfo(Symbol(), MODE_BID);
+   double previousPrice = ai.GetPreviousPrice();
+
+   // Check if the market conditions meet the trading criteria
+   if (ai.CheckTradingCriteria(currentPrice, previousPrice))
+   {
+      // Generate trading signals using machine learning algorithms
+      int signal = ai.GenerateSignal(currentPrice, previousPrice);
+
+      // Execute buy or sell orders based on the generated signal
+      if (signal == SIGNAL_BUY)
+      {
+         trade.Buy(LOT_SIZE, currentPrice, STOP_LOSS, TAKE_PROFIT, TRAILING_STOP, BREAK_EVEN);
+      }
+      else if (signal == SIGNAL_SELL)
+      {
+         trade.Sell(LOT_SIZE, currentPrice, STOP_LOSS, TAKE_PROFIT, TRAILING_STOP, BREAK_EVEN);
+      }
+   }
+
+   // Update previous price for the next tick
+   ai.UpdatePreviousPrice(currentPrice);
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                          OnDeinit() Function                      |
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   // Record trading results and performance metrics
+   double profitLoss = trade.ProfitLoss();
+   double equityCurve = trade.EquityCurve();
+   trade.RecordTradeHistory();
+
+   // Generate performance report and statistical analysis
+   double roi = trade.ReturnOnInvestment();
+   double drawdown = trade.Drawdown();
+   trade.GeneratePerformanceReport();
+
+   // Display trading results and performance metrics to the user
+   Print('Profit/Loss: ', profitLoss);
+   Print('Equity Curve: ', equityCurve);
+   Print('Return on Investment: ', roi);
+   Print('Drawdown: ', drawdown);
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                     OnChartEvent() Function                       |
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnChartEvent(const int id, const long& lparam, const double& dparam, const string& sparam)
+{
+   // Update trading parameters based on user input
+   if (id == CHARTEVENT_KEYDOWN)
+   {
+      if (sparam == 'L')
+      {
+         // Increase lot size
+         trade.AdjustLotSize(LOT_SIZE + 0.1);
+      }
+      else if (sparam == 'S')
+      {
+         // Decrease lot size
+         trade.AdjustLotSize(LOT_SIZE - 0.1);
+      }
+      else if (sparam == 'T')
+      {
+         // Increase take profit level
+         trade.AdjustTakeProfit(TAKE_PROFIT + 10);
+      }
+      else if (sparam == 'D')
+      {
+         // Decrease take profit level
+         trade.AdjustTakeProfit(TAKE_PROFIT - 10);
+      }
+      else if (sparam == 'R')
+      {
+         // Increase trailing stop level
+         trade.AdjustTrailingStop(TRAILING_STOP + 10);
+      }
+      else if (sparam == 'F')
+      {
+         // Decrease trailing stop level
+         trade.AdjustTrailingStop(TRAILING_STOP - 10);
+      }
+   }
+}
